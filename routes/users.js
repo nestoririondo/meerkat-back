@@ -9,12 +9,13 @@ import {
   updateEvents,
 } from "../controllers/users.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { getUserEvents } from "../controllers/events.js";
 
 const userRouter = express.Router();
 
 userRouter.post("/", createUser);
 userRouter.post("/login", loginUser);
-userRouter.get("/user", authenticate, getUser);
+userRouter.get("/user", authenticate, getUser, getUserEvents);
 userRouter.get("/all", getUsers);
 userRouter.put("/:id", updateUser);
 userRouter.put("/contacts/:id", updateContacts);
