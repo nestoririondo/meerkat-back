@@ -17,7 +17,7 @@ export const getUser = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    req.status(500).send(error.message);
+    res.status(500).send(error.message);
   }
 };
 
@@ -54,7 +54,7 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, password, email, picture, contacts, lastLogin } = req.body;
+  const { name, password, email, picture } = req.body;
 
   let hashedPassword;
   if (password !== undefined) hashedPassword = await bcrypt.hash(password, 10);
@@ -64,7 +64,6 @@ export const updateUser = async (req, res) => {
   if (password !== undefined) update.password = hashedPassword;
   if (email !== undefined) update.email = email;
   if (picture !== undefined) update.picture = picture;
-  // if (lastLogin !== undefined) update.lastLogin = lastLogin;
   try {
     const data = await User.findByIdAndUpdate(id, update, { new: true });
     res.json(data);
