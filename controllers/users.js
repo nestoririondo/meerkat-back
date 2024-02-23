@@ -73,13 +73,30 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const updateContacts = async (req, res) => {
+export const addContact = async (req, res) => {
   const { id } = req.params;
-  const newContactId = req.body.contacts;
+  const newContactId = req.body.contact;
+  if (!newContactId) return res.status(400).send("Contact id required.");
   try {
     const data = await User.findByIdAndUpdate(
       id,
       { $addToSet: { contacts: newContactId } },
+      { new: true }
+    );
+    res.json(data);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+export const removeContact = async (req, res) => {
+  const { id } = req.params;
+  const oldContactId = req.body.contact;
+  if (!oldContactId) return res.status(400).send("Contact id required.");
+  try {
+    const data = await User.findByIdAndUpdate(
+      id,
+      { $pull: { contacts: oldContactId } },
       { new: true }
     );
     res.json(data);

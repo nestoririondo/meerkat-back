@@ -5,7 +5,8 @@ import {
   getUsers,
   updateUser,
   loginUser,
-  updateContacts,
+  addContact,
+  removeContact,
 } from "../controllers/users.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { getUserEvents } from "../controllers/events.js";
@@ -17,8 +18,8 @@ userRouter.post("/login", loginUser);
 userRouter.get("/user", authenticate, getUser, getUserEvents);
 userRouter.get("/all", getUsers);
 userRouter.put("/:id", updateUser);
-userRouter.put("/contacts/:id", updateContacts);
+userRouter.put("/:id/contacts/add", addContact);
+userRouter.put("/:id/contacts/remove", removeContact);
 // userRouter.delete("/:id", deleteUser);
-
 
 export default userRouter;
