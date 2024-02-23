@@ -32,7 +32,7 @@ export const getEvent = async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-    if (event.owner !== userId && !event.participants.includes(userId)) {
+    if (event.owner.toString() !== userId && !event.participants.includes(userId)) {
       return res.status(403).json({ message: "Unauthorized." });
     }
     return res.status(200).json(event);
@@ -50,7 +50,7 @@ export const updateEvent = async (req, res) => {
       return res.status(404).json({ error: "Event not found." });
     }
     if (event.owner.toString() !== userId) {
-      return res.status(403).json({ message: "You are not the event owner." });
+      return res.status(403).json({ message: "User not authorized to edit this event." });
     }
     const updatedEvent = await Event.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -71,7 +71,7 @@ export const updateParticipants = async (req, res) => {
       return res.status(404).json({ error: "Event not found." });
     }
     if (event.owner.toString() !== userId) {
-      return res.status(403).json({ error: "User not authorized to edit this event" });
+      return res.status(403).json({ error: "User not authorized to edit this event." });
     }
     event.participants = newParticipants;
     const updatedEvent = await event.save();
