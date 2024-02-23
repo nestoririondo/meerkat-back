@@ -10,11 +10,12 @@ import { authenticate } from "../middlewares/authenticate.js";
 
 const userRouter = express.Router();
 
-userRouter.get("/:id", authenticate, getUser);
-userRouter.get("/all", getUsers);
 userRouter.post("/", createUser);
+userRouter.post("/login", loginUser);
+userRouter.get("/user", authenticate, getUser);
+userRouter.get("/all", getUsers);
 userRouter.put("/:id", updateUser);
 // userRouter.delete("/:id", deleteUser);
-userRouter.post("/login", loginUser);
+
 
 export default userRouter;

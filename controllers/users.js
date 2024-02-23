@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const SECRET_TOKEN = process.env.SECRET_TOKEN;
 
@@ -10,8 +11,8 @@ const generateToken = (user) => {
 };
 
 export const getUser = async (req, res) => {
-  const { id } = req.params;
   try {
+    const { id } = req.user;
     const data = await User.findById(id);
     res.json(data);
   } catch (error) {
@@ -22,7 +23,12 @@ export const getUser = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const data = await User.find();
-    res.status(200).json(data);
+    const users = data.map((user) => {
+      const { _id, name, email, picture, contacts, events, lastLogin } = user;
+      return { _id, name, email, picture, contacts, events, lastLogin };
+    });
+
+    res.status(200).json(users);
   } catch (error) {
     req.status(500).send(error.message);
   }
@@ -30,19 +36,24 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   const { name, email, password, picture } = req.body;
+  if (!name || !email || !password) {
+    return res
+      .status(400)
+      .json({ message: "Name, email, and password required." });
+  }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { name, email, password, picture };
+    const newUser = { name, email, password: hashedPassword, picture };
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
-    req.status(500).send(error.message);
+    res.status(500).send(error.message);
   }
 };
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, password, email, picture, constacts, lastLogin } = req.body;
+  const { name, password, email, picture, contacts, lastLogin } = req.body;
 
   const update = {};
   if (name !== undefined) update.name = name;
@@ -50,6 +61,7 @@ export const updateUser = async (req, res) => {
   if (email !== undefined) update.email = email;
   if (picture !== undefined) update.picture = picture;
   if (contacts !== undefined) update.contacts = contacts;
+  if (lastLogin !== undefined) update.lastLogin = lastLogin;
   try {
     const data = await User.findByIdAndUpdate(id, update, { new: true });
     res.json(data);
