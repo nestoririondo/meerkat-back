@@ -6,7 +6,7 @@ const eventRouter = express.Router();
 
 eventRouter.post('/', createEvent);
 eventRouter.get('/:id', authenticate, getEvent);
-eventRouter.put('/:id', updateEvent);
+eventRouter.put('/:id', authenticate, updateEvent);
 // eventRouter.delete('/:id', deleteEvent);
 
 export default eventRouter;
