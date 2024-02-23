@@ -10,11 +10,12 @@ const generateToken = (user) => {
   });
 };
 
-export const getUser = async (req, res) => {
+export const getUser = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const data = await User.findById(id);
-    res.json(data);
+    const user = await User.findById(id);
+    req.user = user;
+    next();
   } catch (error) {
     req.status(500).send(error.message);
   }
