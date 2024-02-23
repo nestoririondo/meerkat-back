@@ -28,7 +28,10 @@ export const getEvent = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
   try {
-    const event = await Event.findById(id);
+    const event = await Event.findById(id).populate(
+      "participants",
+      "name picture"
+    );
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -55,11 +58,9 @@ export const updateEvent = async (req, res) => {
     );
 
     if (!updatedEvent) {
-      return res
-        .status(403)
-        .json({
-          message: "User not authorized to edit this event or event not found.",
-        });
+      return res.status(403).json({
+        message: "User not authorized to edit this event or event not found.",
+      });
     }
 
     return res.status(200).json(updatedEvent);
