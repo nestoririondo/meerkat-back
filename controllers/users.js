@@ -88,21 +88,6 @@ export const updateContacts = async (req, res) => {
   }
 };
 
-export const updateEvents = async (req, res) => {
-  const { id } = req.params;
-  const newEventId = req.body.events;
-  try {
-    const data = await User.findByIdAndUpdate(
-      id,
-      { $addToSet: { events: newEventId } },
-      { new: true }
-    );
-    res.json(data);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
-};
-
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
