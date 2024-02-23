@@ -57,7 +57,7 @@ export const updateUser = async (req, res) => {
   const { name, password, email, picture, contacts, lastLogin } = req.body;
 
   let hashedPassword;
-  if (password !== undefined) hashedPassword = await bcrypt.hash(password,10)
+  if (password !== undefined) hashedPassword = await bcrypt.hash(password, 10);
 
   const update = {};
   if (name !== undefined) update.name = name;
@@ -73,28 +73,35 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const updateContacts = async (req,res)=> {
+export const updateContacts = async (req, res) => {
   const { id } = req.params;
-  const  newContact = req.body.contacts;
+  const newContactId = req.body.contacts;
   try {
-    const data = await User.findByIdAndUpdate(id, {$addToSet: {contacts: newContact}}, { new: true });
+    const data = await User.findByIdAndUpdate(
+      id,
+      { $addToSet: { contacts: newContactId } },
+      { new: true }
+    );
     res.json(data);
   } catch (error) {
     res.status(500).send(error.message);
   }
-}
+};
 
-export const updateEvents = async (req,res)=> {
+export const updateEvents = async (req, res) => {
   const { id } = req.params;
-  const  newEvent = req.body.events;
+  const newEventId = req.body.events;
   try {
-    const data = await User.findByIdAndUpdate(id, {$addToSet: {events: newEvent}}, { new: true });
+    const data = await User.findByIdAndUpdate(
+      id,
+      { $addToSet: { events: newEventId } },
+      { new: true }
+    );
     res.json(data);
   } catch (error) {
     res.status(500).send(error.message);
   }
-}
-
+};
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
