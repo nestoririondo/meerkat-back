@@ -22,7 +22,6 @@ const EventSchema = new mongoose.Schema({
       assignee: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       done: { type: Boolean, default: false },
       title: { type: String, required: true },
-      description: { type: String },
     },
   ],
 });

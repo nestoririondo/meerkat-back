@@ -18,3 +18,13 @@ export const authenticate = async (req, res, next) => {
     next();
   });
 };
+
+export const updateLastLogin = async (req, res, next) => {
+  try {
+    req.user.lastLogin = Date.now();
+    await req.user.save();
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
