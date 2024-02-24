@@ -54,7 +54,9 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, password, email, picture } = req.body;
+  const { name, password, email, picture, ...other } = req.body;
+  if (Object.keys(other).length > 0)
+    return res.status(400).send("Invalid updates.");
 
   let hashedPassword;
   if (password !== undefined) hashedPassword = await bcrypt.hash(password, 10);
@@ -76,29 +78,30 @@ export const addContact = async (req, res) => {
   const { id } = req.params;
   const newContactId = req.body.contact;
   if (!newContactId) return res.status(400).send("Contact id required.");
+  if (id === newContactId)
+    return res.status(400).send("Can't add self as contact.");
+  if (req.user.contacts.includes(newContactId))
+    return res.status(400).send("Contact already added.");
+
   try {
-    const data = await User.findByIdAndUpdate(
-      id,
-      { $addToSet: { contacts: newContactId } },
-      { new: true }
-    );
-    res.json(data);
+    req.user.contacts.push(newContactId);
+    const updatedUser = await req.user.save();
+
+    res.json(updatedUser);
   } catch (error) {
     res.status(500).send(error.message);
   }
 };
 
 export const removeContact = async (req, res) => {
-  const { id } = req.params;
   const oldContactId = req.body.contact;
   if (!oldContactId) return res.status(400).send("Contact id required.");
   try {
-    const data = await User.findByIdAndUpdate(
-      id,
-      { $pull: { contacts: oldContactId } },
-      { new: true }
+    req.user.contacts = req.user.contacts.filter(
+      (contact) => contact.toString() !== oldContactId
     );
-    res.json(data);
+    const updatedUser = await req.user.save();
+    res.json(updatedUser);
   } catch (error) {
     res.status(500).send(error.message);
   }

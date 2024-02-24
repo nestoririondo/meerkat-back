@@ -1,5 +1,3 @@
-import Event from "../models/Event.js";
-
 export const addAndAssignTodo = async (req, res) => {
     const { title, description, assignee } = req.body;
     const userId = req.user.id;

@@ -17,9 +17,9 @@ userRouter.post("/", createUser);
 userRouter.post("/login", loginUser);
 userRouter.get("/user", authenticate, getUser, updateLastLogin, getUserEvents);
 userRouter.get("/all", getUsers);
-userRouter.put("/:id", updateUser);
-userRouter.put("/:id/contacts/add", addContact);
-userRouter.put("/:id/contacts/remove", removeContact);
+userRouter.put("/:id", authenticate, updateUser);
+userRouter.put("/:id/contacts/add", authenticate, getUser, addContact);
+userRouter.put("/:id/contacts/remove", authenticate, getUser, removeContact);
 // userRouter.delete("/:id", deleteUser);
 
 export default userRouter;
