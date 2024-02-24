@@ -7,7 +7,8 @@ const MessageSchema = new mongoose.Schema({
         text: {type: String, required: true, default: ""},
         file: {type: String}
     },
-    created: {type: Date, default: Date.now}
+    created: {type: Date, default: Date.now},
+    readBy: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}]
 }) 
 const Message = mongoose.model("Message", MessageSchema)
 
