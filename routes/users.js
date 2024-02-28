@@ -7,16 +7,18 @@ import {
   loginUser,
   addContact,
   removeContact,
+  getUserNames
 } from "../controllers/users.js";
 import { authenticate, updateLastLogin } from "../middlewares/authenticate.js";
-import { getUserEvents } from "../controllers/events.js";
 
 const userRouter = express.Router();
 
 userRouter.post("/", createUser);
 userRouter.post("/login", loginUser);
-userRouter.get("/user", authenticate, getUser, updateLastLogin, getUserEvents);
+userRouter.get("/user", authenticate, getUser, updateLastLogin);
 userRouter.get("/all", authenticate, getUsers);
+userRouter.get("/names", getUserNames);
+
 userRouter.put("/:id", authenticate, updateUser);
 userRouter.put("/:id/contacts/add", authenticate, addContact);
 userRouter.put("/:id/contacts/remove", authenticate, removeContact);

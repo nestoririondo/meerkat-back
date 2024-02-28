@@ -19,10 +19,9 @@ export const getUserEvents = async (req, res) => {
       .populate("participants", "name picture")
       .sort({ date: 1 });
 
-    const userAndEvents = { user: req.user, events: events };
     return !events
       ? res.status(404).json({ message: "No events found" })
-      : res.json(userAndEvents);
+      : res.json(events);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -93,5 +92,47 @@ export const updateParticipants = async (req, res) => {
     return res.status(200).json(updatedEvent);
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+// NOT TESTED ENDPOINTS
+
+export const addParticipant = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const newParticipantId = req.body.participant;
+  if (!newParticipantId)
+    return res.status(400).send("Participant id required.");
+  try {
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).send("Event not found.");
+    if (event.participants.map((p) => p.toString()).includes(newParticipantId))
+      return res.status(400).send("Participant already added.");
+
+    event.participants.push(newParticipantId);
+    const updatedEvent = await event.save();
+
+    res.json(updatedEvent);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+export const removeParticipant = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const oldParticipantId = req.body.participant;
+  if (!oldParticipantId)
+    return res.status(400).send("Participant id required.");
+  try {
+    const event = await Event.findById(id);
+    if (!event) return res.status(404).send("Event not found.");
+    event.participants.pull(oldParticipantId);
+    const updatedEvent = await event.save();
+    res.json(updatedEvent);
+  } catch (error) {
+    res.status(500).send(error.message);
   }
 };
