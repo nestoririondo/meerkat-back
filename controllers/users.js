@@ -13,7 +13,7 @@ const generateToken = (user) => {
 export const getUser = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const user = await User.findById(id).populate("contacts", "name picture");
+    const user = await User.findById(id);
     req.user = user;
     next();
   } catch (error) {
@@ -82,7 +82,7 @@ export const updateUser = async (req, res) => {
 
 export const addContact = async (req, res) => {
   const { id } = req.params;
-  console.log("addContact", id, req.body.contact)
+  console.log("addContact", id, req.body.contact);
   const newContactId = req.body.contact;
   if (!newContactId) return res.status(400).send("Contact id required.");
   if (id === newContactId)
@@ -110,10 +110,13 @@ export const removeContact = async (req, res) => {
   try {
     const user = await User.findById(id);
     if (!user) return res.status(404).send("User not found.");
-    user.contacts = user.contacts.filter(
-      (contact) => contact.toString() !== oldContactId
-    );
+    
+    user.contacts.pull(oldContactId);
     const updatedUser = await user.save();
+
+    console.log(user.contacts, "contacts")
+
+
     res.json(updatedUser);
   } catch (error) {
     res.status(500).send(error.message);
@@ -137,3 +140,14 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getUserNames = async (req, res) => {
+  const { arrayOfIds } = req.query;
+  console.log("getUserNames", arrayOfIds);
+  try {
+    const data = await User.find({ _id: { $in: arrayOfIds } }).select("name picture");
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+}
