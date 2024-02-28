@@ -13,7 +13,7 @@ const generateToken = (user) => {
 export const getUser = async (req, res, next) => {
   try {
     const { id } = req.user;
-    const user = await User.findById(id);
+    const user = await User.findById(id).populate("contacts", "name picture");
     req.user = user;
     next();
   } catch (error) {

@@ -14,7 +14,11 @@ export const getUserEvents = async (req, res) => {
   try {
     const events = await Event.find({
       $or: [{ owner: userId }, { participants: userId }],
-    }).sort({date: 1});
+    })
+      .populate("owner", "name picture")
+      .populate("participants", "name picture")
+      .sort({ date: 1 });
+
     const userAndEvents = { user: req.user, events: events };
     return !events
       ? res.status(404).json({ message: "No events found" })
