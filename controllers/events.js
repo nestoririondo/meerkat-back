@@ -36,12 +36,13 @@ export const getEvent = async (req, res) => {
       "participants",
       "name picture"
     );
+    console.log();
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
     if (
       event.owner.toString() !== userId &&
-      !event.participants.includes(userId)
+      !event.participants.map((p) => p._id.toString()).includes(userId)
     ) {
       return res.status(403).json({ message: "Unauthorized." });
     }

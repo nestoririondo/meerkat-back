@@ -48,7 +48,7 @@ export const createUser = async (req, res) => {
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
-    res.status(500).send({message: error.message});
+    res.status(500).send({ message: error.message });
   }
 };
 
@@ -80,12 +80,15 @@ export const addContact = async (req, res) => {
   if (!newContactId) return res.status(400).send("Contact id required.");
   if (id === newContactId)
     return res.status(400).send("Can't add self as contact.");
-  if (req.user.contacts.includes(newContactId))
+  const user = await User.findById(id);
+  if (!user) return res.status(404).send("User not found.");
+
+  if (user.contacts.map((contact) => contact.toString()).includes(newContactId))
     return res.status(400).send("Contact already added.");
 
   try {
-    req.user.contacts.push(newContactId);
-    const updatedUser = await req.user.save();
+    user.contacts.push(newContactId);
+    const updatedUser = await user.save();
 
     res.json(updatedUser);
   } catch (error) {
@@ -95,12 +98,15 @@ export const addContact = async (req, res) => {
 
 export const removeContact = async (req, res) => {
   const oldContactId = req.body.contact;
+  const { id } = req.params;
   if (!oldContactId) return res.status(400).send("Contact id required.");
   try {
-    req.user.contacts = req.user.contacts.filter(
+    const user = await User.findById(id);
+    if (!user) return res.status(404).send("User not found.");
+    user.contacts = user.contacts.filter(
       (contact) => contact.toString() !== oldContactId
     );
-    const updatedUser = await req.user.save();
+    const updatedUser = await user.save();
     res.json(updatedUser);
   } catch (error) {
     res.status(500).send(error.message);

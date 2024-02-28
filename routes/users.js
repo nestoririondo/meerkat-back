@@ -18,8 +18,8 @@ userRouter.post("/login", loginUser);
 userRouter.get("/user", authenticate, getUser, updateLastLogin, getUserEvents);
 userRouter.get("/all", getUsers);
 userRouter.put("/:id", authenticate, updateUser);
-userRouter.put("/:id/contacts/add", authenticate, getUser, addContact);
-userRouter.put("/:id/contacts/remove", authenticate, getUser, removeContact);
+userRouter.put("/:id/contacts/add", authenticate, addContact);
+userRouter.put("/:id/contacts/remove", authenticate, removeContact);
 // userRouter.delete("/:id", deleteUser);
 
 export default userRouter;
