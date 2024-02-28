@@ -48,7 +48,7 @@ export const createUser = async (req, res) => {
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
-    res.status(500).send(error.message);
+    res.status(500).send({message: error.message});
   }
 };
 
@@ -111,10 +111,10 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).json({ message: "User not found." });
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(403).json({ message: "Invalid credentials." });
+      return res.status(403).json({ message: "Wrong password." });
     }
 
     const token = generateToken(user);
