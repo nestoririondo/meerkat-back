@@ -22,16 +22,22 @@ export const getUser = async (req, res, next) => {
 };
 
 export const getUsers = async (req, res) => {
+  const { query } = req;
+  const { id } = req.user;
+  if (!query.q) return res.status(400).json({ message: "Query required." });
   try {
-    const data = await User.find();
-    const users = data.map((user) => {
-      const { _id, name, email, picture, contacts, events, lastLogin } = user;
-      return { _id, name, email, picture, contacts, events, lastLogin };
+    const data = await User.find({
+      $or: [
+        { name: { $regex: query.q, $options: "i" } },
+        { email: { $regex: query.q, $options: "i" } },
+      ],
     });
-
-    res.status(200).json(users);
+    const filteredData = data.filter((user) => user._id.toString() !== id);
+    if (filteredData.length === 0)
+      return res.status(404).json({ message: "No users found." });
+    res.status(200).json(filteredData);
   } catch (error) {
-    req.status(500).send(error.message);
+    res.status(500).send(error.message);
   }
 };
 
@@ -76,6 +82,7 @@ export const updateUser = async (req, res) => {
 
 export const addContact = async (req, res) => {
   const { id } = req.params;
+  console.log("addContact", id, req.body.contact)
   const newContactId = req.body.contact;
   if (!newContactId) return res.status(400).send("Contact id required.");
   if (id === newContactId)
