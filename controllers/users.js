@@ -54,6 +54,12 @@ export const createUser = async (req, res) => {
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
+    console.log(error.code, error.keyValue);
+    if (error.code === 11000 && error.keyValue.email)
+      return res.status(400).json({ message: "Email already in use." });
+    if (error.code === 11000 && error.keyValue.name)
+      return res.status(400).json({ message: "User name already in use." });
+
     res.status(500).send({ message: error.message });
   }
 };
