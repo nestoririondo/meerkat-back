@@ -82,18 +82,25 @@ export const updateUser = async (req, res) => {
 
 export const addContact = async (req, res) => {
   const { id } = req.params;
-  console.log("addContact", id, req.body.contact);
   const newContactId = req.body.contact;
   if (!newContactId) return res.status(400).send("Contact id required.");
   if (id === newContactId)
     return res.status(400).send("Can't add self as contact.");
-  const user = await User.findById(id);
-  if (!user) return res.status(404).send("User not found.");
-
-  if (user.contacts.map((contact) => contact.toString()).includes(newContactId))
-    return res.status(400).send("Contact already added.");
 
   try {
+    // add user to new contact's contacts
+    const updatedContact = await User.findById(newContactId);
+    if (!updatedContact) return res.status(404).send("Contact not found.");
+    updatedContact.contacts.push(id);
+    await updatedContact.save();
+
+    // add new contact to user's contacts
+    const user = await User.findById(id);
+    if (!user) return res.status(404).send("User not found.");
+    if (
+      user.contacts.map((contact) => contact.toString()).includes(newContactId)
+    )
+      return res.status(400).send("Contact already added.");
     user.contacts.push(newContactId);
     const updatedUser = await user.save();
 
@@ -108,14 +115,17 @@ export const removeContact = async (req, res) => {
   const { id } = req.params;
   if (!oldContactId) return res.status(400).send("Contact id required.");
   try {
+    // remove user from old contact's contacts
+    const updatedContact = await User.findById(oldContactId);
+    if (!updatedContact) return res.status(404).send("Contact not found.");
+    updatedContact.contacts.pull(id);
+    await updatedContact.save();
+
+    // remove old contact from user's contacts
     const user = await User.findById(id);
     if (!user) return res.status(404).send("User not found.");
-    
     user.contacts.pull(oldContactId);
     const updatedUser = await user.save();
-
-    console.log(user.contacts, "contacts")
-
 
     res.json(updatedUser);
   } catch (error) {
@@ -143,11 +153,12 @@ export const loginUser = async (req, res) => {
 
 export const getUserNames = async (req, res) => {
   const { arrayOfIds } = req.query;
-  console.log("getUserNames", arrayOfIds);
   try {
-    const data = await User.find({ _id: { $in: arrayOfIds } }).select("name picture");
+    const data = await User.find({ _id: { $in: arrayOfIds } }).select(
+      "name picture"
+    );
     res.status(200).json(data);
   } catch (error) {
     res.status(500).send(error.message);
   }
-}
+};
