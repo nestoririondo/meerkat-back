@@ -10,8 +10,15 @@ export const addAndAssignTodo = async (req, res) => {
     const todo = { title, description, assignee: assignee || null };
     req.event.todos.push(todo);
     let updatedEvent = await req.event.save();
-    updatedEvent = await updatedEvent.populate("participants", "name picture");
-    return res.status(200).json(updatedEvent);
+    updatedEvent = await updatedEvent.populate({
+      path: "participants owner",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
+    return res.status(201).json(updatedEvent);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -32,7 +39,14 @@ export const checkUncheckTodo = async (req, res) => {
     const todo = req.event.todos.id(todoId);
     todo.done = !todo.done;
     let updatedEvent = await req.event.save();
-    updatedEvent = await updatedEvent.populate("participants", "name picture");
+    updatedEvent = await updatedEvent.populate({
+      path: "participants owner",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
     return res.status(200).json(updatedEvent);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -51,7 +65,8 @@ export const editTodo = async (req, res) => {
     }
     const todo = req.event.todos.id(todoId);
     if (title !== undefined) todo.title = title;
-    if (assignee !== undefined) todo.assignee = assignee === "" ? null : assignee;
+    if (assignee !== undefined)
+      todo.assignee = assignee === "" ? null : assignee;
     const updatedEvent = await req.event.save();
     return res.status(200).json(updatedEvent);
   } catch (error) {

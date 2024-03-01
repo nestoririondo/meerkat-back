@@ -5,7 +5,7 @@ import { connectDatabase } from "./db/client.js";
 import userRouter from "./routes/users.js";
 import eventRouter from "./routes/events.js";
 import messageRouter from "./routes/messages.js";
-
+import imageRouter from './routes/images.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +16,7 @@ app.use(express.json());
 app.use("/users", userRouter);
 app.use("/events", eventRouter);
 app.use("/messages", messageRouter);
+app.use('/images', imageRouter);
 
 const startServer = async () => {
   await connectDatabase();

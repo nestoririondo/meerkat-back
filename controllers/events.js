@@ -31,15 +31,19 @@ export const getEvent = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
   try {
-    const event = await Event.findById(id).populate(
-      "participants",
-      "name picture"
-    );
+    const event = await Event.findById(id).populate({
+      path: "participants owner", 
+      select: "name picture", 
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
     if (
-      event.owner.toString() !== userId &&
+      event.owner._id.toString() !== userId &&
       !event.participants.map((p) => p._id.toString()).includes(userId)
     ) {
       return res.status(403).json({ message: "Unauthorized." });
@@ -94,8 +98,6 @@ export const updateParticipants = async (req, res) => {
   }
 };
 
-// NOT TESTED ENDPOINTS
-
 export const addParticipant = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
@@ -112,7 +114,14 @@ export const addParticipant = async (req, res) => {
 
     event.participants.push(newParticipantId);
     let updatedEvent = await event.save();
-    updatedEvent = await updatedEvent.populate("participants", "name picture");
+    updatedEvent = await updatedEvent.populate({
+      path: "participants owner",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
 
     res.json(updatedEvent);
   } catch (error) {
@@ -134,7 +143,14 @@ export const removeParticipant = async (req, res) => {
 
     event.participants.pull(oldParticipantId);
     let updatedEvent = await event.save();
-    updatedEvent = await updatedEvent.populate("participants", "name picture");
+    updatedEvent = await updatedEvent.populate({
+      path: "participants owner",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
 
     res.json(updatedEvent);
   } catch (error) {
