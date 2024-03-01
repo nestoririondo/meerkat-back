@@ -4,7 +4,7 @@ import cors from "cors";
 import { connectDatabase } from "./db/client.js";
 import userRouter from "./routes/users.js";
 import eventRouter from "./routes/events.js";
-// import messageRouter from "./routes/messages.js";
+import messageRouter from "./routes/messages.js";
 
 
 const app = express();
@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.use("/users", userRouter);
 app.use("/events", eventRouter);
-// app.use("/messages", messageRouter);
+app.use("/messages", messageRouter);
 
 const startServer = async () => {
   await connectDatabase();
