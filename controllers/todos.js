@@ -9,7 +9,8 @@ export const addAndAssignTodo = async (req, res) => {
     }
     const todo = { title, description, assignee: assignee || null };
     req.event.todos.push(todo);
-    const updatedEvent = await req.event.save();
+    let updatedEvent = await req.event.save();
+    updatedEvent = await updatedEvent.populate("participants", "name picture");
     return res.status(200).json(updatedEvent);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -30,7 +31,8 @@ export const checkUncheckTodo = async (req, res) => {
     }
     const todo = req.event.todos.id(todoId);
     todo.done = !todo.done;
-    const updatedEvent = await req.event.save();
+    let updatedEvent = await req.event.save();
+    updatedEvent = await updatedEvent.populate("participants", "name picture");
     return res.status(200).json(updatedEvent);
   } catch (error) {
     return res.status(500).json({ error: error.message });
