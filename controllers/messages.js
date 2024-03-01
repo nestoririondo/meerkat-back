@@ -30,3 +30,32 @@ export const postMessage = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getUnreadMessagesNumber = async (req, res) => {
+  const { id } = req.params;
+  const { id: userId } = req.user;
+  try {
+    const unreadMessages = await Message.find({
+      event: id,
+      readBy: { $ne: userId },
+    });
+    res.json({ unreadMessages: unreadMessages.length });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const markMessagesAsRead = async (req, res) => {
+  const { id } = req.params;
+  const { id: userId } = req.user;
+  console.log(id, userId)
+  try {
+    await Message.updateMany(
+      { event: id, readBy: { $ne: userId } },
+      { $addToSet: { readBy: userId } }
+    );
+    res.json({ message: "Messages marked as read" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
