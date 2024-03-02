@@ -9,7 +9,7 @@ export const getProfileImages = async (req, res) => {
   }
 };
 
-export const getBackgroundImages = async (req, res) => {
+export const getEventImages = async (req, res) => {
   try {
     const images = await Image.find({ type: "background" });
     res.json(images);
@@ -17,3 +17,4 @@ export const getBackgroundImages = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+

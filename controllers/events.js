@@ -15,9 +15,18 @@ export const getUserEvents = async (req, res) => {
     const events = await Event.find({
       $or: [{ owner: userId }, { participants: userId }],
     })
-      .populate("owner", "name picture")
-      .populate("participants", "name picture")
-      .sort({ date: 1 });
+      .populate({
+        path: "participants owner",
+        select: "name picture",
+        populate: {
+          path: "picture",
+          select: "url",
+        },
+      })
+      .populate({
+        path: "picture",
+        select: "url",
+      });
 
     return !events
       ? res.status(404).json({ message: "No events found" })
@@ -31,14 +40,21 @@ export const getEvent = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
   try {
-    const event = await Event.findById(id).populate({
-      path: "participants owner",
-      select: "name picture",
-      populate: {
+    const event = await Event.findById(id)
+      .populate({
+        path: "participants owner",
+        select: "name picture",
+        populate: {
+          path: "picture",
+          select: "url",
+        },
+      })
+      .populate({
         path: "picture",
         select: "url",
-      },
-    });
+      });
+    console.log(event);
+
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }

@@ -14,7 +14,7 @@ const EventSchema = new mongoose.Schema({
     start: { type: Date, required: true },
     end: { type: Date },
   },
-  picture: { type: String, default: "1" },
+  picture: { type: mongoose.Schema.Types.ObjectId, ref: "Image" },
   created: { type: Date, default: Date.now },
   messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
   todos: [
