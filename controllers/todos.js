@@ -50,11 +50,10 @@ export const editTodo = async (req, res) => {
         .json({ error: "User not authorized to edit this event." });
     }
     const todo = req.event.todos.id(todoId);
-    if (title !== undefined) todo.title = title;
-    if (assignee !== undefined)
-      todo.assignee = assignee === "" ? null : assignee;
+    if (title) todo.title = title;
+    if (assignee) todo.assignee = assignee === "" ? null : assignee;
     const updatedEvent = await req.event.save();
-    return res.status(200).json(updatedEvent);
+    return res.status(200).json(updatedEvent.todos);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -75,7 +74,7 @@ export const deleteTodo = async (req, res) => {
     }
     req.event.todos.pull(todoId);
     const updatedEvent = await req.event.save();
-    return res.status(200).json(updatedEvent);
+    return res.status(200).json(updatedEvent.todos);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
