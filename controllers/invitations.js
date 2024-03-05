@@ -1,4 +1,5 @@
 import Invitation from "../models/Invitation.js";
+import Event from "../models/Event.js";
 
 export const getEventInvitations = async (req, res) => {
   const { eventId } = req.params; // event id
@@ -10,28 +11,23 @@ export const getEventInvitations = async (req, res) => {
   }
 };
 
-export const getMyEventInvitations = async (req, res) => {
+export const getMyInvitations = async (req, res) => {
   const { id } = req.user; // user id
   try {
     const invitations = await Invitation.find({
       invited: id,
       status: "pending",
-    });
-    res.json(invitations);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-}
+    })
+      .populate({
+        path: "inviting",
+        select: "name picture",
+        populate: {
+          path: "picture",
+          select: "url",
+        },
+      })
+      .populate("event", "title date");
 
-export const getFriendRequests = async (req, res) => {
-  const { id } = req.user; // user id
-  console.log(req.user);
-  try {
-    const invitations = await Invitation.find({
-      type: "friendship",
-      invited: id,
-      status: "pending",
-    });
     res.json(invitations);
   } catch (error) {
     res.status(404).json({ message: error.message });
@@ -105,6 +101,18 @@ export const updateInvitation = async (req, res) => {
     );
     if (invitation.inviting === id || invitation.invited === id) {
       return res.status(403).json({ message: "Unauthorized" });
+    }
+    if (invitation.type === "event") {
+      if (invitation.status === "accepted") {
+        await Event.findByIdAndUpdate(invitation.event, {
+          $addToSet: { participants: invitation.invited },
+        });
+      } else if (invitation.status === "rejected") {
+        await Event.findByIdAndUpdate(invitation.event, {
+          $pull: { participants: invitation.invited },
+        });
+      
+      }
     }
     res.json(invitation);
   } catch (error) {
