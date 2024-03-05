@@ -10,6 +10,19 @@ export const getEventInvitations = async (req, res) => {
   }
 };
 
+export const getMyEventInvitations = async (req, res) => {
+  const { id } = req.user; // user id
+  try {
+    const invitations = await Invitation.find({
+      invited: id,
+      status: "pending",
+    });
+    res.json(invitations);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+}
+
 export const getFriendRequests = async (req, res) => {
   const { id } = req.user; // user id
   console.log(req.user);
@@ -26,26 +39,27 @@ export const getFriendRequests = async (req, res) => {
 };
 
 export const createInvitation = async (req, res) => {
-  const { type, invited, event } = req.body;
+  const { eventId } = req.params;
+  const { invited } = req.body;
   const { id } = req.user;
   console.log(id, "inviting");
   try {
     const existingInvitation = await Invitation.findOne({
-      type,
+      type: "event",
       inviting: id,
       invited,
       status: "pending",
-      event,
+      event: eventId,
     });
     if (existingInvitation) {
       return res.status(400).json({ message: "Invitation already exists" });
     }
 
     const invitation = await Invitation.create({
-      type,
+      type: "event",
       inviting: id,
       invited,
-      event,
+      event: eventId,
     });
     res.status(201).json(invitation);
   } catch (error) {
