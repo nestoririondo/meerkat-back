@@ -101,7 +101,7 @@ export const addContact = async (req, res) => {
     await updatedContact.save();
 
     // add new contact to user's contacts
-    const user = await User.findById(id).populate("picture", "url")
+    const user = await User.findById(id).populate("picture", "url");
     if (!user) return res.status(404).send("User not found.");
     if (
       user.contacts.map((contact) => contact.toString()).includes(newContactId)
@@ -128,7 +128,7 @@ export const removeContact = async (req, res) => {
     await updatedContact.save();
 
     // remove old contact from user's contacts
-    const user = await User.findById(id).populate("picture", "url")
+    const user = await User.findById(id).populate("picture", "url");
     if (!user) return res.status(404).send("User not found.");
     user.contacts.pull(oldContactId);
     const updatedUser = await user.save();
@@ -160,7 +160,9 @@ export const loginUser = async (req, res) => {
 export const getUserNames = async (req, res) => {
   const { arrayOfIds } = req.query;
   try {
-    const data = await User.find({ _id: { $in: arrayOfIds } }).populate("picture", "url").select("name picture");
+    const data = await User.find({ _id: { $in: arrayOfIds } })
+      .populate("picture", "url")
+      .select("name picture");
     res.status(200).json(data);
   } catch (error) {
     res.status(500).send(error.message);

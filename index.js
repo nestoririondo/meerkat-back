@@ -6,6 +6,7 @@ import userRouter from "./routes/users.js";
 import eventRouter from "./routes/events.js";
 import messageRouter from "./routes/messages.js";
 import imageRouter from './routes/images.js';
+import invitationRouter from './routes/invitations.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,7 @@ app.use("/users", userRouter);
 app.use("/events", eventRouter);
 app.use("/messages", messageRouter);
 app.use('/images', imageRouter);
+app.use('/invitations', invitationRouter);
 
 const startServer = async () => {
   await connectDatabase();
