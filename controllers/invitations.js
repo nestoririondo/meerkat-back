@@ -1,5 +1,6 @@
 import Invitation from "../models/Invitation.js";
 import Event from "../models/Event.js";
+import User from "../models/User.js";
 
 export const getEventInvitations = async (req, res) => {
   const { eventId } = req.params; // event id
@@ -34,11 +35,32 @@ export const getMyInvitations = async (req, res) => {
   }
 };
 
+export const getMyFriendRequests = async (req, res) => {
+  const { id } = req.user;
+  try {
+    const invitations = await Invitation.find({
+      $or: [{ inviting: id }, { invited: id }],
+      type: "friendship",
+      status: "pending",
+    }).populate({
+      path: "invited inviting",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
+
+    res.json(invitations);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 export const createInvitation = async (req, res) => {
-  const { eventId } = req.params;
   const { invited } = req.body;
   const { id } = req.user;
-  console.log(id, "inviting");
+  const { eventId } = req.params;
   try {
     const existingInvitation = await Invitation.findOne({
       type: "event",
@@ -76,11 +98,20 @@ export const createFriendRequest = async (req, res) => {
     if (existingInvitation) {
       return res.status(400).json({ message: "Friend request already exists" });
     }
-    const invitation = await Invitation.create({
+    let invitation = await Invitation.create({
       type: "friendship",
       inviting: id,
       invited,
     });
+    invitation = await invitation.populate({
+      path: "inviting invited",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
+
     res.status(201).json(invitation);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -98,23 +129,53 @@ export const updateInvitation = async (req, res) => {
       {
         new: true,
       }
-    );
+    ).populate({
+      path: "inviting invited",
+      select: "name picture",
+      populate: {
+        path: "picture",
+        select: "url",
+      },
+    });
+    if (invitation.inviting._id === id || invitation.invited._id === id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (invitation.type === "event" && invitation.status === "accepted") {
+      await Event.findByIdAndUpdate(invitation.event, {
+        $addToSet: { participants: invitation.invited._id },
+      });
+    } else if (invitation.status === "rejected") {
+      await Event.findByIdAndDelete(invitation);
+    }
+
+    if (invitation.type === "friendship" && invitation.status === "accepted") {
+      await User.findByIdAndUpdate(invitation.inviting._id, {
+        $addToSet: { contacts: invitation.invited._id },
+      });
+      await User.findByIdAndUpdate(invitation.invited._id, {
+        $addToSet: { contacts: invitation.inviting._id },
+      });
+    } else if (invitation.status === "rejected") {
+      await User.findByIdAndDelete(invitation);
+    }
+
+    res.json(invitation);
+  } catch (error) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
+export const deleteInvitation = async (req, res) => {
+  const { invitationId } = req.params;
+  const { id } = req.user;
+  try {
+    const invitation = await Invitation.findById(invitationId);
     if (invitation.inviting === id || invitation.invited === id) {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    if (invitation.type === "event") {
-      if (invitation.status === "accepted") {
-        await Event.findByIdAndUpdate(invitation.event, {
-          $addToSet: { participants: invitation.invited },
-        });
-      } else if (invitation.status === "rejected") {
-        await Event.findByIdAndUpdate(invitation.event, {
-          $pull: { participants: invitation.invited },
-        });
-      
-      }
-    }
-    res.json(invitation);
+    await Invitation.findByIdAndDelete(invitationId);
+    res.json({ message: "Invitation deleted" });
   } catch (error) {
     res.status(404).json({ message: error.message });
   }
