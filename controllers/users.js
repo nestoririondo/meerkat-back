@@ -1,11 +1,18 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer";
+import Invitation from "../models/Invitation.js";
 
 const SECRET_TOKEN = process.env.SECRET_TOKEN;
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_CLIENTID = process.env.GMAIL_CLIENTID;
+const GMAIL_CLIENTSECRET = process.env.GMAIL_CLIENTSECRET;
+const GMAIL_REFRESHTOKEN = process.env.GMAIL_REFRESHTOKEN;
+const CLIENT = process.env.CLIENT;
 
 const generateToken = (user) => {
-  return jwt.sign({ id: user._id }, SECRET_TOKEN, {
+  return jwt.sign({ id: user._id, email: user.email }, SECRET_TOKEN, {
     expiresIn: "8h",
   });
 };
@@ -168,3 +175,93 @@ export const getUserNames = async (req, res) => {
     res.status(500).send(error.message);
   }
 };
+
+export const inviteUser = async (req, res) => {
+  console.log("EMAIL SEND REQUEST", req.body, req.params, req.user.id);
+  const { email } = req.body;
+  const { id } = req.params;
+  const userId = req.user.id;
+  if (!email) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+  try {
+    // Create a new user with the provided email
+    const tempUsername = email.split("@")[0]; // Use the part before the @ in the email as the temporary username
+    const tempPassword = await bcrypt.hash("tempPassword123!", 10); // Use a temporary password
+    const newUser = { name: tempUsername, email, password: tempPassword, picture: "65e237b101b8715758b7236f" };
+    const user = await User.create(newUser);
+
+    // Generate a unique token for the user
+    const token = generateToken(user);
+
+    // Send an invitation email with a link to complete the profile
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: GMAIL_USER,
+        clientId: GMAIL_CLIENTID,
+        clientSecret: GMAIL_CLIENTSECRET,
+        refreshToken: GMAIL_REFRESHTOKEN,
+      },
+    });    
+
+    const mailOptions = {
+      from: '"The Meerkats" <jointhemeerkats@gmail.com>',
+      to: email,
+      subject: "Complete your registration",
+      text: `Please click the following link to complete your registration: ${CLIENT}/complete-registration/${token}`,
+      html: `<p>Please click the following link to complete your registration: <a href="${CLIENT}/complete-registration/${token}">Complete Registration</a></p>`,
+    };
+
+    //  create an invitation
+    const invitation = await Invitation.create({
+      type: "event",
+      inviting: userId,
+      invited: user._id,
+      event: id,
+    });
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json(invitation);
+
+  } catch (error) {
+    console.log(error.code, error.keyValue);
+    if (error.code === 11000 && error.keyValue.email)
+      return res.status(400).json({ message: "Email already in use." });
+
+    res.status(500).send({ message: error.message });
+  }
+};
+
+export const decryptToken = async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ message: "Token required." });
+  try {
+    const user = jwt.verify(token, SECRET_TOKEN);
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+export const completeRegistration = async (req, res) => {
+  const { id } = req.params;
+  const { name, email, password } = req.body;
+  console.log("completeRegistration", id, name, email, password)
+  if (!name || !email || !password) {
+    return res
+      .status(400)
+      .json({ message: "Name, email, and password required." });
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { name, email, password: hashedPassword };
+    const data = await User.findByIdAndUpdate(id, newUser, { new: true });
+    res.status(201).json(data);
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+}
