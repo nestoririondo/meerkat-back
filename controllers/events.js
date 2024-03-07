@@ -1,4 +1,6 @@
 import Event from "../models/Event.js";
+import Message from "../models/Message.js";
+import Invitation from "../models/Invitation.js";
 
 export const createEvent = async (req, res) => {
   try {
@@ -73,12 +75,15 @@ export const getEvent = async (req, res) => {
 export const updateEvent = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
+  const { data } = req.body;
   try {
-    const updatedEvent = await Event.findOneAndUpdate(
+    let updatedEvent = await Event.findOneAndUpdate(
       { _id: id, owner: userId },
-      req.body,
+      { ...data },
       { new: true }
     );
+
+    console.log({ data }, "data");
 
     if (!updatedEvent) {
       return res.status(403).json({
@@ -86,7 +91,11 @@ export const updateEvent = async (req, res) => {
       });
     }
 
-    return res.status(200).json(updatedEvent);
+    const updatedData = {};
+    for (const key in data) {
+      updatedData[key] = updatedEvent[key];
+    }
+    return res.status(200).json(updatedData);
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -164,6 +173,50 @@ export const removeParticipant = async (req, res) => {
       }
     );
     res.json(event.participants);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+export const leaveEvent = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  console.log(userId, "LEAVING");
+  try {
+    const event = await Event.findOneAndUpdate(
+      { _id: id, participants: userId },
+      { $pull: { participants: userId } },
+      {
+        new: true,
+      }
+    );
+    if (!event) return res.status(404).send("Event not found or unauthorized.");
+    res.json(event.participants);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
+
+export const deleteEvent = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  try {
+    const event = await Event.findOne({ _id: id, owner: userId });
+    if (!event) return res.status(404).send("Event not found or unauthorized.");
+    await Event.deleteOne({ _id: id });
+    // delete invitations
+    const invitations = await Invitation.find({ event: id });
+    if (invitations) {
+      await Invitation.deleteMany({ event: id });
+    }
+    // delete messages
+    const messages = await Message.find({ event: id });
+    if (messages) {
+      await Message.deleteMany({ event: id });
+    }
+    res.json({
+      message: "Event, invitations to event and messages from event deleted.",
+    });
   } catch (error) {
     res.status(500).send(error.message);
   }
