@@ -28,7 +28,7 @@ export const getUserEvents = async (req, res) => {
       .populate({
         path: "picture",
         select: "url",
-      });
+      }).sort({ date: 1 });
 
     return !events
       ? res.status(404).json({ message: "No events found" })
