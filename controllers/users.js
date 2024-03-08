@@ -3,13 +3,16 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import Invitation from "../models/Invitation.js";
+import Event from "../models/Event.js";
 
-const SECRET_TOKEN = process.env.SECRET_TOKEN;
-const GMAIL_USER = process.env.GMAIL_USER;
-const GMAIL_CLIENTID = process.env.GMAIL_CLIENTID;
-const GMAIL_CLIENTSECRET = process.env.GMAIL_CLIENTSECRET;
-const GMAIL_REFRESHTOKEN = process.env.GMAIL_REFRESHTOKEN;
-const CLIENT = process.env.CLIENT;
+const {
+  SECRET_TOKEN,
+  GMAIL_USER,
+  GMAIL_CLIENTID,
+  GMAIL_CLIENTSECRET,
+  GMAIL_REFRESHTOKEN,
+  CLIENT,
+} = process.env;
 
 const generateToken = (user) => {
   return jwt.sign({ id: user._id, email: user.email }, SECRET_TOKEN, {
@@ -61,7 +64,7 @@ export const createUser = async (req, res) => {
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
-    console.log(error.code, error.keyValue);
+    console.log(error.code, error.keyValue, "error");
     if (error.code === 11000 && error.keyValue.email)
       return res.status(400).json({ message: "Email already in use." });
     if (error.code === 11000 && error.keyValue.name)
@@ -188,8 +191,16 @@ export const inviteUser = async (req, res) => {
     // Create a new user with the provided email
     const tempUsername = email.split("@")[0]; // Use the part before the @ in the email as the temporary username
     const tempPassword = await bcrypt.hash("tempPassword123!", 10); // Use a temporary password
-    const newUser = { name: tempUsername, email, password: tempPassword, picture: "65e237b101b8715758b7236f" };
+    const newUser = {
+      name: tempUsername,
+      email,
+      password: tempPassword,
+      picture: "65e237b101b8715758b7236f",
+    };
     const user = await User.create(newUser);
+
+    // Get event information
+    const event = await Event.findById(id).populate("owner", "name");
 
     // Generate a unique token for the user
     const token = generateToken(user);
@@ -197,22 +208,22 @@ export const inviteUser = async (req, res) => {
     // Send an invitation email with a link to complete the profile
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
-        type: 'OAuth2',
+        type: "OAuth2",
         user: GMAIL_USER,
         clientId: GMAIL_CLIENTID,
         clientSecret: GMAIL_CLIENTSECRET,
         refreshToken: GMAIL_REFRESHTOKEN,
       },
-    });    
+    });
 
     const mailOptions = {
       from: '"The Meerkats" <jointhemeerkats@gmail.com>',
       to: email,
       subject: "Complete your registration",
-      text: `Please click the following link to complete your registration: ${CLIENT}/complete-registration/${token}`,
-      html: `<p>Please click the following link to complete your registration: <a href="${CLIENT}/complete-registration/${token}">Complete Registration</a></p>`,
+      text: `${event.owner.name} just invited your to ${event.title}. Please sign up using the following link and join the Meerkats: ${CLIENT}/complete-registration/${token}`,
+      html: `<p>${event.owner.name} just invited your to ${event.title}.</p><p>Please sign up using the following link and join the Meerkats: <a href="${CLIENT}/complete-registration/${token}">Complete Registration</a></p>`,
     };
 
     //  create an invitation
@@ -226,7 +237,6 @@ export const inviteUser = async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     res.status(201).json(invitation);
-
   } catch (error) {
     console.log(error.code, error.keyValue);
     if (error.code === 11000 && error.keyValue.email)
@@ -245,12 +255,12 @@ export const decryptToken = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
 
 export const completeRegistration = async (req, res) => {
   const { id } = req.params;
   const { name, email, password } = req.body;
-  console.log("completeRegistration", id, name, email, password)
+  console.log("completeRegistration", id, name, email, password);
   if (!name || !email || !password) {
     return res
       .status(400)
@@ -264,4 +274,4 @@ export const completeRegistration = async (req, res) => {
   } catch (error) {
     res.status(500).send({ message: error.message });
   }
-}
+};

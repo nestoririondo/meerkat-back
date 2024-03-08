@@ -13,7 +13,7 @@ const InvitationSchema = new mongoose.Schema({
     required: true,
   },
   event: { type: mongoose.Schema.Types.ObjectId, ref: "Event" },
-  status: { type: String, default: "pending"}, // pending, accepted, declined
+  status: { type: String, default: "pending"}, // pending, accepted, rejected
   created: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now },
 });
