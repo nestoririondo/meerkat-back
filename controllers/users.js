@@ -89,7 +89,9 @@ export const updateUser = async (req, res) => {
   if (email !== undefined) update.email = email;
   if (picture !== undefined) update.picture = picture;
   try {
-    const data = await User.findByIdAndUpdate(id, update, { new: true });
+    const data = await User.findByIdAndUpdate(id, update, {
+      new: true,
+    }).populate("picture", "url");
     res.json(data);
   } catch (error) {
     res.status(500).send(error.message);
