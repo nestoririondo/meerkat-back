@@ -54,6 +54,10 @@ export const getEvent = async (req, res) => {
       .populate({
         path: "picture",
         select: "url",
+      })
+      .populate({
+        path: "expenses.user",
+        select: "name picture",
       });
     console.log(event);
 

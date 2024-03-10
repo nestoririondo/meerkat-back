@@ -7,7 +7,7 @@ const EventSchema = new mongoose.Schema({
   description: { type: String },
   location: {
     description: { type: String, required: true },
-    map: { type: Boolean, default: false},
+    map: { type: Boolean, default: false },
     lat: { type: Number },
     lng: { type: Number },
   },
@@ -23,6 +23,13 @@ const EventSchema = new mongoose.Schema({
       assignee: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       done: { type: Boolean, default: false },
       title: { type: String, required: true },
+    },
+  ],
+  expenses: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      amount: { type: Number, required: true },
+      title: {type: String, required: true}
     },
   ],
 });
