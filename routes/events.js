@@ -18,7 +18,7 @@ import {
 } from "../controllers/todos.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { checkEventExists } from "../middlewares/events.js";
-import { addExpenses } from "../controllers/expenses.js";
+import { addExpenses, deleteExpenses } from "../controllers/expenses.js";
 
 const eventRouter = express.Router();
 
@@ -58,5 +58,11 @@ eventRouter.delete(
 );
 
 eventRouter.put("/:id/expenses/", authenticate, checkEventExists, addExpenses);
+eventRouter.delete(
+  "/:id/expenses/:expenseId",
+  authenticate,
+  checkEventExists,
+  deleteExpenses
+);
 
 export default eventRouter;
