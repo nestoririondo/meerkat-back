@@ -197,7 +197,6 @@ export const inviteUser = async (req, res) => {
       name: tempUsername,
       email,
       password: tempPassword,
-      picture: "65e237b101b8715758b7236f",
     };
     const user = await User.create(newUser);
 
@@ -261,16 +260,16 @@ export const decryptToken = async (req, res) => {
 
 export const completeRegistration = async (req, res) => {
   const { id } = req.params;
-  const { name, email, password } = req.body;
-  console.log("completeRegistration", id, name, email, password);
-  if (!name || !email || !password) {
+  const { name, email, password, picture } = req.body;
+  console.log("completeRegistration", id, name, email, password, picture);
+  if (!name || !email || !password || !picture) {
     return res
       .status(400)
       .json({ message: "Name, email, and password required." });
   }
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { name, email, password: hashedPassword };
+    const newUser = { name, email, password: hashedPassword, picture };
     const data = await User.findByIdAndUpdate(id, newUser, { new: true });
     res.status(201).json(data);
   } catch (error) {
