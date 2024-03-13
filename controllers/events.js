@@ -59,7 +59,6 @@ export const getEvent = async (req, res) => {
         path: "expenses.user",
         select: "name picture",
       });
-    console.log(event);
 
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -86,8 +85,6 @@ export const updateEvent = async (req, res) => {
       { ...data },
       { new: true }
     );
-
-    console.log({ data }, "data");
 
     if (!updatedEvent) {
       return res.status(403).json({
@@ -185,7 +182,6 @@ export const removeParticipant = async (req, res) => {
 export const leaveEvent = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
-  console.log(userId, "LEAVING");
   try {
     const event = await Event.findOneAndUpdate(
       { _id: id, participants: userId },

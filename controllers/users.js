@@ -64,7 +64,6 @@ export const createUser = async (req, res) => {
     const data = await User.create(newUser);
     res.status(201).json(data);
   } catch (error) {
-    console.log(error.code, error.keyValue, "error");
     if (error.code === 11000 && error.keyValue.email)
       return res.status(400).json({ message: "Email already in use." });
     if (error.code === 11000 && error.keyValue.name)
@@ -163,7 +162,6 @@ export const loginUser = async (req, res) => {
 
     const token = generateToken(user);
     res.json({ token, user: { username: user.name, email: user.email } });
-    console.log("loginUser", user, token);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -182,7 +180,6 @@ export const getUserNames = async (req, res) => {
 };
 
 export const inviteUser = async (req, res) => {
-  console.log("EMAIL SEND REQUEST", req.body, req.params, req.user.id);
   const { email } = req.body;
   const { id } = req.params;
   const userId = req.user.id;
@@ -235,11 +232,17 @@ export const inviteUser = async (req, res) => {
       event: id,
     });
 
+    // create frienship request
+    const friendshipRequest = await Invitation.create({
+      type: "friendship",
+      inviting: userId,
+      invited: user._id,
+    });
+
     await transporter.sendMail(mailOptions);
 
     res.status(201).json(invitation);
   } catch (error) {
-    console.log(error.code, error.keyValue);
     if (error.code === 11000 && error.keyValue.email)
       return res.status(400).json({ message: "Email already in use." });
 
@@ -261,7 +264,6 @@ export const decryptToken = async (req, res) => {
 export const completeRegistration = async (req, res) => {
   const { id } = req.params;
   const { name, email, password, picture } = req.body;
-  console.log("completeRegistration", id, name, email, password, picture);
   if (!name || !email || !password || !picture) {
     return res
       .status(400)
